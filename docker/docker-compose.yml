@@ -334,6 +334,32 @@ services:
     profiles:
       - splunk  # Only start when splunk profile is active
 
+  # ─── Trino MCP sidecar (opt-in: --profile trino) ────────────────────────
+  # Exposes the mcp-trino MCP server over HTTP on port 3000.
+  # mcp-config.json connects via mcp-remote at http://localhost:3000/mcp.
+  # Requires a running Trino cluster reachable at TRINO_HOST.
+  # Start: docker compose --profile trino up -d mcp-trino
+  mcp-trino:
+    image: ghcr.io/tuannvm/mcp-trino:latest
+    container_name: deeptempo-mcp-trino
+    environment:
+      - TRINO_HOST=${TRINO_HOST:-localhost}
+      - TRINO_PORT=${TRINO_PORT:-8080}
+      - TRINO_USER=${TRINO_USER:-vigil}
+      - TRINO_SCHEME=${TRINO_SCHEME:-http}
+      - TRINO_CATALOG=${TRINO_CATALOG:-}
+      - TRINO_SCHEMA=${TRINO_SCHEMA:-}
+      - TRINO_ALLOWED_SCHEMAS=${TRINO_ALLOWED_SCHEMAS:-}
+      - MCP_TRANSPORT=http
+      - MCP_PORT=3000
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - deeptempo-network
+    profiles:
+      - trino
+
   # ─── Kafka (opt-in: --profile kafka) ─────────────────────────────────────
   # Single-broker KRaft-mode Kafka for local streaming ingestion. See the
   # "Kafka" tab in Settings to enable the consumer and configure topics.

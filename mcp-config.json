@@ -228,6 +228,14 @@
       }
     },
 
+    "trino": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3000/mcp"],
+      "env": {
+        "_setup_note": "Trino distributed SQL via mcp-trino (community, MIT, Go). Start sidecar with: docker compose --profile trino up -d. Exposes: execute_query, list_catalogs, list_schemas, list_tables, get_table_schema, explain_query. Set TRINO_HOST, TRINO_PORT, TRINO_USER, TRINO_SCHEME, and TRINO_ALLOWED_SCHEMAS in .env. See: https://github.com/tuannvm/mcp-trino"
+      }
+    },
+
     "_comment_tier3_evaluate": "--- Tier 3: Vendor MCP Exists But Scope Differs (evaluate) ---",
 
     "palo-alto": {
