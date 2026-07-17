@@ -91,6 +91,7 @@ def init_default_user():
                     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
                     mfa_enabled BOOLEAN NOT NULL DEFAULT FALSE,
                     mfa_secret VARCHAR(255),
+                    mfa_recovery_codes JSONB NOT NULL DEFAULT '[]',
                     last_login TIMESTAMP,
                     login_count INTEGER NOT NULL DEFAULT 0,
                     failed_login_count INTEGER NOT NULL DEFAULT 0,
@@ -107,13 +108,25 @@ def init_default_user():
             # All statements are idempotent and safe on fresh DBs.
             logger.info("Reconciling users table schema with latest definition...")
             session.execute(text(
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_count INTEGER NOT NULL DEFAULT 0"
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_count INTEGER"
+            ))
+            session.execute(text(
+                "ALTER TABLE users ALTER COLUMN failed_login_count SET DEFAULT 0"
+            ))
+            session.execute(text(
+                "UPDATE users SET failed_login_count = 0 WHERE failed_login_count IS NULL"
             ))
             session.execute(text(
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP"
             ))
             session.execute(text(
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_history JSONB NOT NULL DEFAULT '[]'"
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_history JSONB"
+            ))
+            session.execute(text(
+                "ALTER TABLE users ALTER COLUMN password_history SET DEFAULT '[]'::jsonb"
+            ))
+            session.execute(text(
+                "UPDATE users SET password_history = '[]'::jsonb WHERE password_history IS NULL"
             ))
             session.execute(text(
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP"
@@ -123,6 +136,19 @@ def init_default_user():
             ))
             session.execute(text(
                 "ALTER TABLE users ALTER COLUMN login_count SET DEFAULT 0"
+            ))
+            # ADD COLUMN IF NOT EXISTS is a no-op when the column exists, so it
+            # never sets the default on schemas that have the column without one.
+            # Use three idempotent steps instead: add (nullable), set default,
+            # backfill — the INSERT below also provides the value explicitly.
+            session.execute(text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_recovery_codes JSONB"
+            ))
+            session.execute(text(
+                "ALTER TABLE users ALTER COLUMN mfa_recovery_codes SET DEFAULT '[]'::jsonb"
+            ))
+            session.execute(text(
+                "UPDATE users SET mfa_recovery_codes = '[]'::jsonb WHERE mfa_recovery_codes IS NULL"
             ))
             
             # Check if default admin user already exists
@@ -144,12 +170,12 @@ def init_default_user():
                 INSERT INTO users (
                     user_id, username, email, password_hash, full_name, role_id,
                     is_active, is_verified,
-                    mfa_enabled, login_count, failed_login_count, password_history
+                    mfa_enabled, mfa_recovery_codes, login_count, failed_login_count, password_history
                 )
                 VALUES (
                     :user_id, :username, :email, :password_hash, :full_name, :role_id,
                     true, true,
-                    false, 0, 0, '[]'::jsonb
+                    false, '[]'::jsonb, 0, 0, '[]'::jsonb
                 )
                 ON CONFLICT (user_id) DO NOTHING
             """), {

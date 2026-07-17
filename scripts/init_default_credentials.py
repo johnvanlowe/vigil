@@ -77,11 +77,23 @@ def init_default_credentials():
         is_verified BOOLEAN NOT NULL DEFAULT FALSE,
         mfa_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         mfa_secret VARCHAR(255),
+        mfa_recovery_codes JSONB NOT NULL DEFAULT '[]',
         last_login TIMESTAMP,
         login_count INTEGER NOT NULL DEFAULT 0,
+        failed_login_count INTEGER NOT NULL DEFAULT 0,
+        locked_until TIMESTAMP,
+        password_history JSONB NOT NULL DEFAULT '[]',
+        password_changed_at TIMESTAMP,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
+
+    -- Reconcile older deployed schemas (safe to rerun).
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_recovery_codes JSONB NOT NULL DEFAULT '[]';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_count INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_history JSONB NOT NULL DEFAULT '[]';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP;
 
     CREATE INDEX IF NOT EXISTS idx_user_username ON users(username);
     CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
@@ -176,8 +188,8 @@ def init_default_credentials():
     # Password: admin123
     # Hash: $2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5aeWG6QErKLzG
     admin_user_sql = """
-    INSERT INTO users (user_id, username, email, password_hash, full_name, role_id, is_active, is_verified) VALUES
-    ('user-admin-default', 'admin', 'admin@deeptempo.ai', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5aeWG6QErKLzG', 'System Administrator', 'role-admin', true, true)
+    INSERT INTO users (user_id, username, email, password_hash, full_name, role_id, is_active, is_verified, mfa_enabled, mfa_recovery_codes, login_count, failed_login_count, password_history) VALUES
+    ('user-admin-default', 'admin', 'admin@deeptempo.ai', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5aeWG6QErKLzG', 'System Administrator', 'role-admin', true, true, false, '[]', 0, 0, '[]')
     ON CONFLICT (user_id) DO NOTHING;
     """
     
