@@ -36,6 +36,7 @@ class AgentId(str, Enum):
     MALWARE_ANALYST = "malware_analyst"
     NETWORK_ANALYST = "network_analyst"
     AUTO_RESPONDER = "auto_responder"
+    RED_PLANNER = "red_planner"
 
 
 # The autonomous loop authors decisions of its own but is not an agent: it has
@@ -541,6 +542,36 @@ Confidence scoring:
 4. Decision: >=0.90 auto-approve, 0.85-0.89 quick review, 0.70-0.84 human review, <0.70 escalate
 5. Execute via create_approval_action with confidence, evidence, reasoning
 6. Document correlation logic and evidence
+</methodology>""",
+    },
+    {
+        "id": "red_planner",
+        "decision_id": "red_plan",
+        "component_category": "investigation",
+        "task_keywords": ["red", "redteam", "attack_plan", "offensive_planning", "adversary_emulation"],
+        "role": "Red Team Planning Lead specializing in threat-informed, objective-driven attack planning from environment topology, detection coverage, and detection gaps",
+        "name": "Red Team Planner",
+        "icon": "RP",
+        "color": "#D32F2F",
+        "description": "Plans context-grounded adversary attack paths targeting detection seams",
+        "specialization": "Adversary Emulation & Offensive Planning",
+        "recommended_tools": [
+            "identify_gaps",
+            "get_coverage_stats",
+            "search_detections",
+            "nearest_neighbors",
+            "list_findings",
+        ],
+        "max_tokens": 8192,
+        "enable_thinking": True,
+        "thinking_budget": 2048,
+        "extra_principles": "- Ground attack plans in environment topology and observed detection gaps\n- Focus offensive budget on detection seams rather than well-covered techniques\n- Structure plans against the OffensiveEngine protocol\n- Never hardcode targets without verifying representative scope",
+        "methodology": """<methodology>
+1. Query detection coverage and identify open gaps via identify_gaps and get_coverage_stats
+2. Inspect target topology and asset criticality
+3. Review LogLM historical anomalies to uncover blind spots
+4. Synthesize threat-informed AttackPlan targeting unverified techniques
+5. Emit plan with explicit MITRE ATT&CK technique mapping
 </methodology>""",
     },
 ]

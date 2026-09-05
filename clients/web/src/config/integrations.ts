@@ -3166,6 +3166,45 @@ export const INTEGRATIONS: IntegrationMetadata[] = [
     ],
     docs_url: 'https://cloudcurrent.biz/vstrike',
   },
+
+  {
+    id: 'artemis',
+    name: 'ARTEMIS Red Team Engine',
+    category: 'Offensive Security',
+    description:
+      'Stanford-Trinity Automated Red Teaming Engine with Multi-agent Intelligent Supervision (ARTEMIS) for closed-loop attack simulation.',
+    functionality_type: 'Offensive Security',
+    fields: [
+      {
+        name: 'target_environment',
+        label: 'Target Environment ID',
+        type: 'text',
+        required: true,
+        placeholder: 'staging',
+      },
+      {
+        name: 'bifrost_url',
+        label: 'Bifrost Gateway URL',
+        type: 'url',
+        required: true,
+        placeholder: 'http://localhost:8000/api/v1/bifrost',
+      },
+      {
+        name: 'api_key',
+        label: 'Bifrost Virtual Key',
+        type: 'password',
+        required: true,
+        placeholder: 'artemis-red-team',
+      },
+      {
+        name: 'mode',
+        label: 'Execution Mode',
+        type: 'text',
+        default: 'local',
+      },
+    ],
+    docs_url: 'https://github.com/Stanford-Trinity/ARTEMIS',
+  },
 ]
 
 export const INTEGRATION_CATEGORIES = [
