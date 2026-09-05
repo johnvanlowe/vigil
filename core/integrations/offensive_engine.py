@@ -28,6 +28,7 @@ class ExecutionStatus(str, Enum):
     PARTIAL = "partial"
     FAILED = "failed"
     STOPPED = "stopped"
+    PENDING_APPROVAL = "pending_approval"
 
 
 class ActionStatus(str, Enum):
@@ -142,12 +143,12 @@ class AttackExecutionResult:
 
     run_id: str
     plan_id: str
-    environment_id: str
-    status: ExecutionStatus
-    action_trace: List[AttackTraceStep]
-    captured_telemetry: List[Dict[str, Any]]
-    started_at: datetime
-    completed_at: datetime
+    environment_id: str = "staging"
+    status: ExecutionStatus = ExecutionStatus.COMPLETED
+    action_trace: List[AttackTraceStep] = field(default_factory=list)
+    captured_telemetry: List[Dict[str, Any]] = field(default_factory=list)
+    started_at: datetime = field(default_factory=utcnow)
+    completed_at: datetime = field(default_factory=utcnow)
     token_spend: Dict[str, Any] = field(default_factory=dict)
     raw_logs: Optional[str] = None
     error: Optional[str] = None
@@ -180,6 +181,7 @@ class StubOffensiveEngine:
     ):
         self.authorized_environments = authorized_environments or [
             "staging",
+            "staging-range",
             "range-01",
             "digital-twin",
             "test-env",
@@ -188,7 +190,10 @@ class StubOffensiveEngine:
         self.executed_plans: List[AttackPlan] = []
 
     async def validate_environment(self, environment_id: str) -> bool:
-        return environment_id in self.authorized_environments
+        return any(
+            environment_id == e or environment_id.startswith(f"{e}-")
+            for e in self.authorized_environments
+        )
 
     async def execute(
         self,

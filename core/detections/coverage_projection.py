@@ -19,8 +19,10 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set
 
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 
 from core.storage.connection import get_db_manager
+from core.storage.ledger import normalize_run_id
 from core.time import utcnow
 
 logger = logging.getLogger(__name__)
@@ -86,8 +88,11 @@ def fold_coverage_projection(
             continue
 
         if kind == "red_plan":
-            cycle_number = payload.get("metadata", {}).get("cycle_number", current_cycle)
-            current_cycle = cycle_number
+            meta = payload.get("metadata", {})
+            cycle_number = meta.get("cycle_number") if isinstance(meta, dict) else None
+            if cycle_number is None:
+                cycle_number = len(cycle_events) + 1
+            current_cycle = int(cycle_number)
             cycle_events.setdefault(current_cycle, []).append(event)
 
             for step in payload.get("steps", []):
@@ -226,20 +231,54 @@ def fold_coverage_projection(
     )
 
 
-def read_coverage_projection(environment_id: str) -> CoverageProjection:
+def read_coverage_projection(
+    environment_id: str,
+    run_id: Optional[str] = None,
+) -> CoverageProjection:
     """Read all relevant Ledger events from agent_events and compute the projection."""
     events: List[Dict[str, Any]] = []
     try:
         db = get_db_manager()
+        if db._session_factory is None:
+            try:
+                db.initialize()
+            except Exception:
+                pass
         with db.session_scope() as session:
-            rows = session.execute(
-                """
-                SELECT run_id, seq, ts, run_kind, kind, payload, schema_version
-                FROM agent_events
-                WHERE kind IN ('red_plan', 'reconstruction_verdict', 'gap_triage_decision', 'detection_promotion')
-                ORDER BY ts ASC, seq ASC
-                """
-            ).fetchall()
+            dialect_name = session.bind.dialect.name if session.bind else "postgresql"
+            if run_id:
+                norm_run_id = normalize_run_id(run_id)
+                if dialect_name == "postgresql":
+                    sql = text(
+                        """
+                        SELECT run_id, seq, ts, run_kind, kind, payload, schema_version
+                        FROM agent_events
+                        WHERE run_id = CAST(:run_id AS uuid)
+                          AND kind IN ('red_plan', 'reconstruction_verdict', 'gap_triage_decision', 'detection_promotion')
+                        ORDER BY ts ASC, seq ASC
+                        """
+                    )
+                else:
+                    sql = text(
+                        """
+                        SELECT run_id, seq, ts, run_kind, kind, payload, schema_version
+                        FROM agent_events
+                        WHERE run_id = :run_id
+                          AND kind IN ('red_plan', 'reconstruction_verdict', 'gap_triage_decision', 'detection_promotion')
+                        ORDER BY ts ASC, seq ASC
+                        """
+                    )
+                rows = session.execute(sql, {"run_id": norm_run_id}).fetchall()
+            else:
+                sql = text(
+                    """
+                    SELECT run_id, seq, ts, run_kind, kind, payload, schema_version
+                    FROM agent_events
+                    WHERE kind IN ('red_plan', 'reconstruction_verdict', 'gap_triage_decision', 'detection_promotion')
+                    ORDER BY ts ASC, seq ASC
+                    """
+                )
+                rows = session.execute(sql).fetchall()
 
             for row in rows:
                 events.append({

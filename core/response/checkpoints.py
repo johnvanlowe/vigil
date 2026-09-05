@@ -18,6 +18,9 @@ def pending_for(run_id: str, checkpoint_id: str, approvals=None):
     ):
         if (action.parameters or {}).get("checkpoint_id") == checkpoint_id:
             return action
+    for action in service.list_actions(status=ActionStatus.PENDING):
+        if action.target == run_id and (action.parameters or {}).get("checkpoint_id") == checkpoint_id:
+            return action
     return None
 
 
@@ -40,19 +43,35 @@ def raise_for_checkpoint(
     if pending_for(run_id, checkpoint_id, service) is not None:
         return False
 
-    service.create_action(
-        action_type=ActionType.WORKFLOW_PHASE,
-        title=title,
-        description=description,
-        target=run_id,
-        confidence=0.0,
-        reason=reason,
-        evidence=[run_id],
-        created_by="agent",
-        parameters={"checkpoint_id": checkpoint_id, **(parameters or {})},
-        workflow_run_id=run_id,
-        workflow_phase_id=phase_id,
-    )
+    try:
+        service.create_action(
+            action_type=ActionType.WORKFLOW_PHASE,
+            title=title,
+            description=description,
+            target=run_id,
+            confidence=0.0,
+            reason=reason,
+            evidence=[run_id],
+            created_by="agent",
+            parameters={"checkpoint_id": checkpoint_id, **(parameters or {})},
+            workflow_run_id=run_id,
+            workflow_phase_id=phase_id,
+        )
+    except Exception as exc:
+        if "foreign key" in str(exc).lower() or "workflow_run_id_fkey" in str(exc):
+            service.create_action(
+                action_type=ActionType.CUSTOM,
+                title=title,
+                description=description,
+                target=run_id,
+                confidence=0.0,
+                reason=reason,
+                evidence=[run_id],
+                created_by="agent",
+                parameters={"checkpoint_id": checkpoint_id, "run_id": run_id, **(parameters or {})},
+            )
+        else:
+            raise
     logger.info("raised approval for %s at checkpoint %s", run_id, checkpoint_id)
     return True
 

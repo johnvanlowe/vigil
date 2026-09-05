@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence
 
 from core.integrations.offensive_engine import AttackPlan, AttackPlanStep
-from core.storage.connection import get_db_manager
+from core.storage.ledger import append_agent_event
 from core.time import utcnow
 
 logger = logging.getLogger(__name__)
@@ -134,6 +134,7 @@ class RedPlanner:
         self,
         ctx: RedPlannerContext,
         seed: Optional[int] = None,
+        cycle_number: Optional[int] = None,
     ) -> AttackPlan:
         """Synthesize attack steps prioritizing coverage gaps and dark seams."""
         steps: List[AttackPlanStep] = []
@@ -192,26 +193,29 @@ class RedPlanner:
                 )
             )
 
+        metadata = {
+            "gaps_cited": [g.get("technique") for g in ctx.identified_gaps],
+            "topology_asset_count": len(ctx.topology_assets),
+            "planner_agent_id": "red_planner",
+        }
+        if cycle_number is not None:
+            metadata["cycle_number"] = cycle_number
+
         plan = AttackPlan.create(
             environment_id=ctx.environment_id,
             objectives=ctx.objectives,
             target_techniques=target_techniques,
             steps=steps,
             seed=seed,
-            metadata={
-                "gaps_cited": [g.get("technique") for g in ctx.identified_gaps],
-                "topology_asset_count": len(ctx.topology_assets),
-                "planner_agent_id": "red_planner",
-            },
+            metadata=metadata,
         )
 
         # Append plan creation to agent_events (Ledger)
         self.append_to_ledger(plan)
         return plan
 
-    def append_to_ledger(self, plan: AttackPlan) -> None:
+    def append_to_ledger(self, plan: AttackPlan) -> int:
         """Record plan and steps to the append-only Ledger (agent_events table)."""
-        now = utcnow()
         payload = {
             "plan_id": plan.plan_id,
             "environment_id": plan.environment_id,
@@ -229,37 +233,11 @@ class RedPlanner:
             "metadata": plan.metadata,
         }
 
-        try:
-            db = get_db_manager()
-            with db.session_scope() as session:
-                # Query next seq for this run_id
-                query = session.execute(
-                    """
-                    SELECT COALESCE(MAX(seq), 0) + 1 FROM agent_events
-                    WHERE run_id = CAST(:run_id AS uuid)
-                    """,
-                    {"run_id": self.run_id},
-                )
-                next_seq = query.scalar() or 1
-
-                session.execute(
-                    """
-                    INSERT INTO agent_events (
-                        run_id, seq, ts, run_kind, kind, payload, schema_version
-                    ) VALUES (
-                        CAST(:run_id AS uuid), :seq, :ts, :run_kind, :kind, CAST(:payload AS jsonb), :schema_version
-                    )
-                    """,
-                    {
-                        "run_id": self.run_id,
-                        "seq": next_seq,
-                        "ts": now,
-                        "run_kind": "compose",
-                        "kind": "red_plan",
-                        "payload": json.dumps(payload),
-                        "schema_version": 1,
-                    },
-                )
-            logger.info("Recorded red_plan %s to Ledger for run %s (seq=%d)", plan.plan_id, self.run_id, next_seq)
-        except Exception as exc:
-            logger.warning("Could not write red_plan to agent_events table: %s", exc)
+        seq = append_agent_event(
+            run_id=self.run_id,
+            kind="red_plan",
+            payload=payload,
+            run_kind="compose",
+        )
+        logger.info("Recorded red_plan %s to Ledger for run %s (seq=%d)", plan.plan_id, self.run_id, seq)
+        return seq

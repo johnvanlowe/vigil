@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 from core.detections.candidate import CandidateStatus, DetectionCandidate
 from core.response.approval_service import ActionStatus, ActionType, ApprovalService
 from core.response.checkpoints import raise_for_checkpoint
-from core.storage.connection import get_db_manager
+from core.storage.ledger import append_agent_event
 from core.time import utcnow
 
 logger = logging.getLogger(__name__)
@@ -176,49 +176,31 @@ class GapTriageService:
             "target_environment": candidate.target_environment,
         }
 
-        self.append_promotion_to_ledger(promotion_event)
+        try:
+            self.append_promotion_to_ledger(promotion_event)
+        except Exception as exc:
+            candidate.status = CandidateStatus.VALIDATED
+            candidate.promoted_at = None
+            logger.error("Promotion failed: failed to record promotion event to ledger: %s", exc)
+            return False
+
         logger.info("Candidate %s successfully promoted to live library by %s", candidate.candidate_id, authorized_by)
         return True
 
-    def append_decision_to_ledger(self, record: Dict[str, Any]) -> None:
-        """Record gap triage decision to agent_events."""
-        self._append_ledger_event("gap_triage_decision", record)
+    def append_decision_to_ledger(self, record: Dict[str, Any]) -> int:
+        """Record gap triage decision to agent_events via canonical ledger."""
+        return append_agent_event(
+            run_id=self.run_id,
+            kind="gap_triage_decision",
+            payload=record,
+            run_kind="compose",
+        )
 
-    def append_promotion_to_ledger(self, record: Dict[str, Any]) -> None:
-        """Record promotion event to agent_events."""
-        self._append_ledger_event("detection_promotion", record)
-
-    def _append_ledger_event(self, kind: str, payload: Dict[str, Any]) -> None:
-        now = utcnow()
-        try:
-            db = get_db_manager()
-            with db.session_scope() as session:
-                query = session.execute(
-                    """
-                    SELECT COALESCE(MAX(seq), 0) + 1 FROM agent_events
-                    WHERE run_id = CAST(:run_id AS uuid)
-                    """,
-                    {"run_id": self.run_id},
-                )
-                next_seq = query.scalar() or 1
-
-                session.execute(
-                    """
-                    INSERT INTO agent_events (
-                        run_id, seq, ts, run_kind, kind, payload, schema_version
-                    ) VALUES (
-                        CAST(:run_id AS uuid), :seq, :ts, :run_kind, :kind, CAST(:payload AS jsonb), :schema_version
-                    )
-                    """,
-                    {
-                        "run_id": self.run_id,
-                        "seq": next_seq,
-                        "ts": now,
-                        "run_kind": "compose",
-                        "kind": kind,
-                        "payload": json.dumps(payload),
-                        "schema_version": 1,
-                    },
-                )
-        except Exception as exc:
-            logger.warning("Could not write %s to agent_events table: %s", kind, exc)
+    def append_promotion_to_ledger(self, record: Dict[str, Any]) -> int:
+        """Record promotion event to agent_events via canonical ledger."""
+        return append_agent_event(
+            run_id=self.run_id,
+            kind="detection_promotion",
+            payload=record,
+            run_kind="compose",
+        )

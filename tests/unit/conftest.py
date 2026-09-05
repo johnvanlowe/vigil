@@ -17,6 +17,7 @@ that gate silently. A missing Postgres is an error here.
 """
 
 import os
+from pathlib import Path
 import secrets
 
 import pytest
@@ -105,6 +106,18 @@ def throwaway_database():
             except Exception as e:  # noqa: BLE001
                 print(f"[test-db] {statement} failed, continuing: {e}")
         manager.create_tables()
+        ledger_path = (
+            Path(__file__).resolve().parents[2]
+            / "infra"
+            / "database"
+            / "init"
+            / "19_agent_ledger.sql"
+        )
+        if ledger_path.exists():
+            try:
+                _run_autocommit(manager, ledger_path.read_text())
+            except Exception as e:  # noqa: BLE001
+                print(f"[test-db] 19_agent_ledger.sql failed: {e}")
         yield name
     finally:
         pinned.undo()

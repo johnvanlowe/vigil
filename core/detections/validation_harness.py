@@ -29,7 +29,7 @@ from core.detections.candidate import (
     ReviewResult,
     ValidationRecord,
 )
-from core.storage.connection import get_db_manager
+from core.storage.ledger import append_agent_event
 from core.time import utcnow
 
 logger = logging.getLogger(__name__)
@@ -273,35 +273,9 @@ class ValidationHarness:
             "feedback": record.feedback_history,
         }
 
-        try:
-            db = get_db_manager()
-            with db.session_scope() as session:
-                query = session.execute(
-                    """
-                    SELECT COALESCE(MAX(seq), 0) + 1 FROM agent_events
-                    WHERE run_id = CAST(:run_id AS uuid)
-                    """,
-                    {"run_id": self.run_id},
-                )
-                next_seq = query.scalar() or 1
-
-                session.execute(
-                    """
-                    INSERT INTO agent_events (
-                        run_id, seq, ts, run_kind, kind, payload, schema_version
-                    ) VALUES (
-                        CAST(:run_id AS uuid), :seq, :ts, :run_kind, :kind, CAST(:payload AS jsonb), :schema_version
-                    )
-                    """,
-                    {
-                        "run_id": self.run_id,
-                        "seq": next_seq,
-                        "ts": now,
-                        "run_kind": "compose",
-                        "kind": "validation_verdict",
-                        "payload": json.dumps(payload),
-                        "schema_version": 1,
-                    },
-                )
-        except Exception as exc:
-            logger.warning("Could not append validation_verdict to agent_events: %s", exc)
+        return append_agent_event(
+            run_id=self.run_id,
+            kind="validation_verdict",
+            payload=payload,
+            run_kind="compose",
+        )

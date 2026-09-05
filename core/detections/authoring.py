@@ -32,11 +32,32 @@ class DetectionAuthor:
         technique_id: str,
     ) -> List[str]:
         """Query LogLM embedding similarity to isolate discriminative behavioral features."""
-        # In production with pgvector / LogLM MCP, nearest_neighbors returns nearest baseline
-        # and anomalous vectors. We extract the salient behavioral attributes that separate them.
         logger.info("Extracting LogLM embedding neighborhood for finding %s (%s)", finding_id, technique_id)
 
-        # Behavioral attributes extracted from anomalous neighborhood
+        # 1. Attempt to query real LogLM nearest_neighbors via MCP findings service
+        features: List[str] = []
+        try:
+            import json
+            from tools.mcp.deeptempo_findings import load_findings, nearest_neighbors
+
+            nn_json = nearest_neighbors(finding_id=finding_id, k=5)
+            nn_data = json.loads(nn_json) if isinstance(nn_json, str) else nn_json
+            if isinstance(nn_data, dict) and "neighbors" in nn_data and nn_data["neighbors"]:
+                all_findings = {f.get("finding_id"): f for f in load_findings()}
+                for n in nn_data["neighbors"]:
+                    match = all_findings.get(n.get("finding_id"))
+                    if match:
+                        if "tactics" in match and isinstance(match["tactics"], list):
+                            features.extend(str(t).lower() for t in match["tactics"])
+                        if "features" in match and isinstance(match["features"], list):
+                            features.extend(str(f) for f in match["features"])
+        except Exception as exc:
+            logger.debug("LogLM nearest_neighbors query fallback to behavioral heuristic: %s", exc)
+
+        if features:
+            return list(dict.fromkeys(features))
+
+        # 2. Graceful no-LogLM degradation: derive behavioral attributes for technique
         if "T1059" in technique_id:
             return [
                 "encoded_command_line_switch",

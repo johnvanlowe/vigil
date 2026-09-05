@@ -35,6 +35,36 @@ class LiveFireResult(BaseModel):
     evaluated_at: str = Field(default_factory=lambda: utcnow().isoformat())
 
 
+def get_default_benign_baseline() -> List[Dict[str, Any]]:
+    """Standard representative benign estate traffic for quiet-on-benign verification."""
+    return [
+        {
+            "event_id": "benign-ev-1",
+            "source": "sysmon",
+            "details": {
+                "process_name": "svchost.exe",
+                "command_line": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+            },
+        },
+        {
+            "event_id": "benign-ev-2",
+            "source": "sysmon",
+            "details": {
+                "process_name": "explorer.exe",
+                "command_line": "C:\\Windows\\Explorer.EXE",
+            },
+        },
+        {
+            "event_id": "benign-ev-3",
+            "source": "sysmon",
+            "details": {
+                "process_name": "powershell.exe",
+                "command_line": "powershell.exe -NoProfile -ExecutionPolicy Restricted -File C:\\Scripts\\legitimate_admin_maintenance.ps1",
+            },
+        },
+    ]
+
+
 class LiveFireService:
     """Evaluates live-fire generalization and benign baseline quietness."""
 
@@ -94,8 +124,17 @@ class LiveFireService:
         benign_baseline_telemetry: Sequence[Dict[str, Any]],
         reseed: int = 84,
         force_retest_miss: bool = False,
+        require_benign_corpus: bool = False,
     ) -> LiveFireResult:
         """Evaluate candidate against reseeded variant and benign baseline telemetry."""
+        if require_benign_corpus and not benign_baseline_telemetry:
+            return LiveFireResult(
+                passed=False,
+                retest_fired=False,
+                quiet_on_benign=False,
+                rejection_reason="Candidate skipped promotion: no benign baseline telemetry corpus provided for quiet-on-benign verification.",
+            )
+
         rule_content_lower = candidate.rule_content.lower()
 
         # 1. Reseeded retest
