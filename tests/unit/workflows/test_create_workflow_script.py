@@ -44,3 +44,13 @@ def test_build_template_renders_with_auto_responder():
     rendered = mod.build_template("test-auto-responder-wf", ["auto_responder"])
     assert "auto_responder" in rendered, "rendered template omits auto_responder"
     assert "Auto Responder" in rendered, "rendered template missing Title-cased agent name"
+
+
+def test_build_template_renders_with_red_planner():
+    """The template renderer must accept red_planner and embed it in
+    the rendered YAML frontmatter + Phase section.
+    """
+    mod = _load_script_module()
+    rendered = mod.build_template("test-red-planner-wf", ["red_planner"])
+    assert "red_planner" in rendered, "rendered template omits red_planner"
+    assert "Red Planner" in rendered, "rendered template missing Title-cased agent name"

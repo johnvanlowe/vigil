@@ -28,6 +28,9 @@ Every agent has access to backend tools via Agent SDK and extensive tools via MC
 | **Compliance** | Regulatory checks | Balanced | NIST, ISO, PCI-DSS, HIPAA, GDPR, SOC 2 assessment |
 | **Malware Analyst** | Malware examination | Deep | Static/dynamic analysis, family classification, C2 identification |
 | **Network Analyst** | Traffic analysis | Deep | Flow analysis, protocol anomalies, lateral movement detection |
+| **Auto-Response Agent** | Autonomous threat response | Deep | Multi-signal correlation, surgical Cloudflare/WAF actions, high-confidence automated containment |
+| **Red Team Planner** | Adversary emulation & offensive planning | Deep | Context-grounded attack plans targeting detection seams, MITRE technique emulation, LogLM anomaly probing |
+| **Custom Agents** | User-defined SOC roles | Configurable | Fork any built-in template or build domain-specific agents with custom tools, prompts, and thinking budgets |
 
 ## Workflows — One-Click Multi-Agent Workflows
 
@@ -39,6 +42,8 @@ Workflows are the operational core of Vigil. Each workflow chains multiple speci
 | **Full Investigation** | Investigator → MITRE Analyst → Correlator → Responder → Reporter | Deep-dive with ATT&CK mapping, cross-signal correlation, response planning, and comprehensive documentation |
 | **Threat Hunt** | Threat Hunter → Network Analyst → Malware Analyst → Threat Intel → Reporter | Hypothesis-driven hunting across network, endpoint, and threat intel — with IOC enrichment and detection recommendations |
 | **Forensic Analysis** | Forensics → Malware Analyst → Network Analyst → Reporter | Post-incident digital forensics with evidence preservation, chain-of-custody documentation suitable for legal proceedings |
+| **Closed-Loop Validation** | Red Team Planner → Offensive Engine → Reconstruction → Detection Author → Validation Harness | Continuous adversary emulation, detection reconstruction, LogLM-grounded authoring, and multi-gate validation |
+| **Cloud Incident** | Investigator → Responder → Reporter | Cloud control-plane and data-plane investigation across AWS/GCP/Azure with automated containment |
 
 **How it works:** Say `"Run incident response on finding f-20260215-abc123"` and the system sequences four agents — triage scores the alert, investigator digs into root cause, responder submits containment actions with confidence-based approval, and reporter generates the final documentation.
 
@@ -333,7 +338,7 @@ cd clients/desktop && npm run dist
                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │             Specialized Built-in & Custom Agents                 │
-│  Triage │ Investigator │ Hunter │ Correlator │ Responder │ ...   │
+│  Triage │ Investigator │ Hunter │ Red Planner │ Auto-Response │... │
 └──────────────────────────────────────────────────────────────────┘
                 │                              │
      Agent SDK (23 tools)              MCP (100+ tools)

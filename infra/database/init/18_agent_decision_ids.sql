@@ -32,13 +32,14 @@ BEGIN
         WHEN 'malware_analyst' THEN 'malware_analysis'
         WHEN 'network_analyst' THEN 'network_analysis'
         WHEN 'auto_responder'  THEN 'auto_response'
+        WHEN 'red_planner'     THEN 'red_plan'
         WHEN 'orchestrator'    THEN 'orchestration'
         ELSE agent_id
     END
     WHERE agent_id IN (
         'investigator', 'correlator', 'reporter', 'responder', 'threat_hunter',
         'mitre_analyst', 'malware_analyst', 'network_analyst', 'auto_responder',
-        'orchestrator'
+        'red_planner', 'orchestrator'
     );
 
     COMMENT ON COLUMN ai_decision_logs.agent_id IS
