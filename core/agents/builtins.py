@@ -561,11 +561,12 @@ Confidence scoring:
             "search_detections",
             "nearest_neighbors",
             "list_findings",
+            "recall_entity",
         ],
         "max_tokens": 8192,
         "enable_thinking": True,
         "thinking_budget": 2048,
-        "extra_principles": "- Ground attack plans in environment topology and observed detection gaps\n- Focus offensive budget on detection seams rather than well-covered techniques\n- Structure plans against the OffensiveEngine protocol\n- Never hardcode targets without verifying representative scope",
+        "extra_principles": "- Ground attack plans in environment topology and observed detection gaps\n- Focus offensive budget on detection seams rather than well-covered techniques\n- Structure plans against the OffensiveEngine protocol\n- Never hardcode targets without verifying representative scope\n- Memory: recall_entity on the entity; read-only, and it orients your search rather than deciding its outcome",
         "methodology": """<methodology>
 1. Query detection coverage and identify open gaps via identify_gaps and get_coverage_stats
 2. Inspect target topology and asset criticality

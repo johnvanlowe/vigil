@@ -33,7 +33,7 @@ type PresetValues = Pick<
 const PRESETS = {
   conservative: {
     label: 'Conservative',
-    summary: 'Minimal spend · 2 agents · tight limits',
+    summary: 'Minimal spend · low concurrency · tight limits',
     values: {
       max_concurrent_agents: 2,
       max_iterations_per_agent: 25,
@@ -45,7 +45,7 @@ const PRESETS = {
   },
   balanced: {
     label: 'Balanced',
-    summary: 'Recommended · 3 agents · $20/hr · $100/day',
+    summary: 'Recommended · balanced concurrency · $20/hr · $100/day',
     values: {
       max_concurrent_agents: 3,
       max_iterations_per_agent: 50,
@@ -57,7 +57,7 @@ const PRESETS = {
   },
   aggressive: {
     label: 'Aggressive',
-    summary: 'Broad coverage · 5 agents · $60/hr · $300/day',
+    summary: 'Broad coverage · high concurrency · $60/hr · $300/day',
     values: {
       max_concurrent_agents: 5,
       max_iterations_per_agent: 100,

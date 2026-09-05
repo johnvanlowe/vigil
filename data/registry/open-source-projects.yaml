@@ -41,7 +41,7 @@
     - Slack
     - Cribl
   notes: >
-    12 specialized agents, 4 multi-agent skills, 30+ MCP integrations,
+    Multiple specialized built-in and custom agents, multi-agent skills, MCP integrations,
     7,200+ detection rules. Built on Claude via Anthropic API.
     Headless daemon for 24/7 autonomous operation.
 

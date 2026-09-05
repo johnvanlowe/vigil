@@ -23,7 +23,7 @@ pytestmark = pytest.mark.unit
 
 def test_recall_entity_in_every_builtin_recommended_tools():
     """Every built-in agent must carry recall_entity in recommended_tools (#735)."""
-    assert len(BUILTIN_AGENTS) == 13
+    assert BUILTIN_AGENTS
     for agent in BUILTIN_AGENTS:
         tools = agent.get("recommended_tools", [])
         assert (

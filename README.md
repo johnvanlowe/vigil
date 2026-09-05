@@ -1,18 +1,18 @@
 # Vigil
 
-Vigil is the leading open source AI SOC: an agentic SOC with 13 specialized AI agents, 30+ MCP integrations, and 7,200+ community detection rules, released under Apache 2.0. Your playbooks are plain-text files, your agent logic is readable Python, and your integrations use an open standard ([MCP](https://modelcontextprotocol.io/)). Every proprietary AI SOC on the market is a black box you rent. Vigil is a capability you own.
+Vigil is the leading open source AI SOC: an agentic SOC with multiple specialized built-in and custom AI agents, MCP integrations, and 7,200+ community detection rules, released under Apache 2.0. Your playbooks are plain-text files, your agent logic is readable Python, and your integrations use an open standard ([MCP](https://modelcontextprotocol.io/)). Every proprietary AI SOC on the market is a black box you rent. Vigil is a capability you own.
 
 Vigil pairs with [LogLM](https://www.deeptempo.ai/platform), a cybersecurity foundation model for [behavioral anomaly detection](https://www.deeptempo.ai/learning-center/behavioral-anomaly-detection), to form the [Intelligent Defense Platform](https://www.deeptempo.ai) from [DeepTempo](https://www.deeptempo.ai). Measured in the open by [SOCBench](https://socbench.org). Docs and community: [vigilsoc.org](https://vigilsoc.org).
 
 The inspiration for the project is in part StackStorm and the experience of some of the founders of this project had in building the Linux Foundation project [StackStorm](https://github.com/StackStorm/st2) and in supporting Netflix and others who used StackStorm to achieve, carefully, very high levels of automation.  You'll sometimes hear us talking about the journey towards full autonomy and lessons learned.  One lesson - the system can only demote itself and only humans can promote additional autonomy.  You'll find this playing out on the way Vigil is designed; for example Vigil will check thresholds for projected costs and confidence levels in completion before executing an automation.  If it looks dodgy or too expensive, it'll double check with the humans before moving ahead.  
 
-The project is built on three pillars: **Agents** — 13 specialized AI agents you can read, fork, and rewire; **Workflows** — multi-agent playbooks defined as Markdown files you edit directly; and **Integrations** — 30+ tool connections via MCP that you configure, not a vendor. The most important pillar is **YOU** — this is your project. Contribute via feedback, code, a repo star, memes on Discord, or otherwise.
+The project is built on three pillars: **Agents** — specialized built-in and custom AI agents you can read, fork, and rewire; **Workflows** — multi-agent playbooks defined as Markdown files you edit directly; and **Integrations** — tool connections via MCP that you configure, not a vendor. The most important pillar is **YOU** — this is your project. Contribute via feedback, code, a repo star, memes on Discord, or otherwise.
 
 ---
 
-## 12 Specialized AI Agents
+## Specialized Built-in & Custom AI Agents
 
-Every agent has access to 19 backend tools via Agent SDK and 100+ additional tools via MCP. Agents are the building blocks that Workflows orchestrate.
+Every agent has access to backend tools via Agent SDK and extensive tools via MCP. Agents are the building blocks that Workflows orchestrate.
 
 | Agent | Role | Thinking | Key Capability |
 |-------|------|----------|----------------|
@@ -332,7 +332,7 @@ cd clients/desktop && npm run dist
                                │
                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                   13 Specialized AI Agents                        │
+│             Specialized Built-in & Custom Agents                 │
 │  Triage │ Investigator │ Hunter │ Correlator │ Responder │ ...   │
 └──────────────────────────────────────────────────────────────────┘
                 │                              │
@@ -340,7 +340,7 @@ cd clients/desktop && npm run dist
                 │                              │
                 ▼                              ▼
 ┌──────────────────────────┐  ┌────────────────────────────────────┐
-│     Backend Services     │  │          MCP Servers (30+)         │
+│     Backend Services     │  │             MCP Servers            │
 │  Detections (7,200+)     │  │  Splunk │ CrowdStrike │ VirusTotal │
 │  Case Management         │  │  Shodan │ Jira │ Slack │ Cribl    │
 │  Approvals │ MITRE ATT&CK│  │  Timesketch │ MISP │ ANY.RUN      │
@@ -422,8 +422,8 @@ Guides live on the site at **[vigilsoc.org/docs](https://vigilsoc.org/docs/)**.
 
 | Doc | Contents |
 |-----|----------|
-| [Agents](https://vigilsoc.org/docs/agents/) | 13 SOC AI agents reference |
-| [Integrations](https://vigilsoc.org/docs/integrations/) | MCP integrations — Splunk, CrowdStrike, VirusTotal, 28+ tools |
+| [Agents](https://vigilsoc.org/docs/agents/) | Built-in and custom SOC AI agents reference |
+| [Integrations](https://vigilsoc.org/docs/integrations/) | MCP integrations — Splunk, CrowdStrike, VirusTotal, and security tools |
 | [Detection engineering](https://vigilsoc.org/docs/detection-engineering/) | Detection engineering with 7,200+ rules |
 | [Chat-driven case management](https://vigilsoc.org/docs/chat-case-management/) | Chat-driven case building guide |
 | [Configuration](https://vigilsoc.org/docs/configuration/) | Environment variables, secrets, deployment |

@@ -2416,7 +2416,7 @@ function AgentsTab() {
           style={{ gridTemplateColumns: customs.length > 0 ? 'repeat(auto-fit, minmax(440px, 1fr))' : '1fr' }}
         >
           {customs.length > 0 && (
-            <AgentSection title={`Custom agents (${customs.length})`} agents={customs} renderActions={(a) => (
+            <AgentSection title="Custom agents" agents={customs} renderActions={(a) => (
               <span className="row-act">
                 <button title="Edit" onClick={() => setEditId(a.handle)}><Icon name="edit" /></button>
                 <button title="Fork into a new copy" disabled={busy !== null} onClick={() => fork(a.handle)}><Icon name={busy === a.handle ? 'refresh' : 'copy'} /></button>
@@ -2424,7 +2424,7 @@ function AgentsTab() {
               </span>
             )} />
           )}
-          <AgentSection title={`Built-in templates (${builtins.length})`} agents={builtins} template renderActions={(a) => (
+          <AgentSection title="Built-in templates" agents={builtins} template renderActions={(a) => (
             <span className="row-act">
               <button title="Fork to editable copy" disabled={busy !== null} onClick={() => fork(a.handle)}><Icon name={busy === a.handle ? 'refresh' : 'fork'} /></button>
             </span>
