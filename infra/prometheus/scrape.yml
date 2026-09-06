@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  - job_name: "vigil-api"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["localhost:8000"]
+        labels:
+          service: "api"
+
+  - job_name: "vigil-daemon"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["localhost:8001"]
+        labels:
+          service: "daemon"
+
+  - job_name: "vigil-worker"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["localhost:8002"]
+        labels:
+          service: "worker"

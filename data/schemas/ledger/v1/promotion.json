@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PromotionEventV1",
+  "description": "Ledger event emitted when a detection candidate is promoted to the overlay",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "rule_name": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string"
+    },
+    "environment_id": {
+      "type": "string"
+    },
+    "authorized_by": {
+      "type": "string"
+    },
+    "pre_authorized": {
+      "type": "boolean"
+    },
+    "overlay_path": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "authorized_by"
+  ]
+}

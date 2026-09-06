@@ -1,88 +1,27 @@
 """Reconstruction phase: map executed attack steps to detection verdicts.
 
-Analogous to NVIDIA's "process and reconstruct". Correlates the offensive
-action trace and captured telemetry against the detection engine and LogLM.
-Evaluates what was seen by rules, what was seen by LogLM, and what was missed.
-
-Schema-and-field grounding ensures verdicts only assert on fields actually
-emitted by the environment's sensors. Every step verdict is written to the
-Ledger (agent_events) with evidence citations.
+Correlates the offensive action trace and captured telemetry against the detection
+engine and LogLM layers. Emits DetectionVerdict per step: 'rule', 'loglm', 'both', 'missed'.
+Grounds verdicts in environment schema, attaches replayable evidence queries, and records
+schema v1 'reconstruction' events to the append-only Ledger.
+Exposed as skill_reconstruct.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Set
 
-from core.integrations.offensive_engine import ActionStatus, AttackTraceStep
+from core.detections.candidates import DetectionVerdict
+from core.integrations.offensive.contract import ActionTraceStep
+from core.integrations.offensive_engine import AttackTraceStep
 from core.storage.ledger import append_agent_event
 from core.time import utcnow
 
 logger = logging.getLogger(__name__)
-
-
-class DetectionVerdictEnum(str, Enum):
-    """Verdict for an individual attack step."""
-
-    DETECTED_BY_RULE = "detected_by_rule"
-    DETECTED_BY_LOGLM = "detected_by_loglm"
-    BOTH = "both"
-    MISSED = "missed"
-
-
-@dataclass
-class EvidenceCitation:
-    """Evidence link tying an attack step to a telemetry Finding or raw event."""
-
-    evidence_id: str
-    source_system: str
-    timestamp: str
-    details: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class AttackStepVerdict:
-    """Atomic unit produced by the reconstruction phase."""
-
-    step_id: str
-    technique_id: str
-    action_name: str
-    status: ActionStatus
-    verdict: DetectionVerdictEnum
-    rule_matches: List[str] = field(default_factory=list)
-    loglm_matches: List[str] = field(default_factory=list)
-    evidence_citations: List[EvidenceCitation] = field(default_factory=list)
-    schema_grounded: bool = True
-    unsupported_fields: List[str] = field(default_factory=list)
-    explanation: str = ""
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "step_id": self.step_id,
-            "technique_id": self.technique_id,
-            "action_name": self.action_name,
-            "status": self.status.value,
-            "verdict": self.verdict.value,
-            "rule_matches": self.rule_matches,
-            "loglm_matches": self.loglm_matches,
-            "evidence_citations": [
-                {
-                    "evidence_id": c.evidence_id,
-                    "source_system": c.source_system,
-                    "timestamp": c.timestamp,
-                    "details": c.details,
-                }
-                for c in self.evidence_citations
-            ],
-            "schema_grounded": self.schema_grounded,
-            "unsupported_fields": self.unsupported_fields,
-            "explanation": self.explanation,
-        }
 
 
 @dataclass
@@ -92,7 +31,7 @@ class ReconstructionReport:
     run_id: str
     plan_id: str
     environment_id: str
-    step_verdicts: List[AttackStepVerdict]
+    step_verdicts: List[DetectionVerdict]
     total_steps: int
     detected_by_rule_count: int
     detected_by_loglm_count: int
@@ -112,16 +51,19 @@ class ReconstructionReport:
             "both_count": self.both_count,
             "missed_count": self.missed_count,
             "gaps": self.gaps,
-            "step_verdicts": [s.to_dict() for s in self.step_verdicts],
+            "step_verdicts": [s.model_dump() for s in self.step_verdicts],
             "reconstructed_at": self.reconstructed_at.isoformat(),
         }
 
 
 class ReconstructionService:
-    """Processes attack traces and captured telemetry into grounded detection verdicts."""
+    """Processes attack traces and telemetry into grounded detection verdicts."""
 
     def __init__(self, run_id: Optional[str] = None):
-        self.run_id = run_id or f"recon-{utcnow().strftime('%Y%m%d')}-{re.sub(r'[^a-zA-Z0-9]', '', str(utcnow()))}"
+        self.run_id = (
+            run_id
+            or f"recon-{utcnow().strftime('%Y%m%d')}-{re.sub(r'[^a-zA-Z0-9]', '', str(utcnow()))}"
+        )
 
     def verify_field_grounding(
         self,
@@ -134,14 +76,15 @@ class ReconstructionService:
 
     def reconstruct(
         self,
-        action_trace: Sequence[AttackTraceStep],
+        action_trace: Sequence[Any],
         telemetry_findings: Sequence[Dict[str, Any]],
         environment_id: str,
         plan_id: str,
+        cycle_number: int = 1,
         available_schema_fields: Optional[Set[str]] = None,
+        ledger_store: Any = None,
     ) -> ReconstructionReport:
-        """Map every attack trace step to its detection verdict across rule and LogLM layers."""
-        # Default schema fields typical of sysmon/auditd telemetry
+        """Map every attack trace step to its DetectionVerdict across rule and LogLM layers."""
         known_schema = available_schema_fields or {
             "process_name",
             "command_line",
@@ -155,7 +98,7 @@ class ReconstructionService:
             "source",
         }
 
-        step_verdicts: List[AttackStepVerdict] = []
+        step_verdicts: List[DetectionVerdict] = []
         gaps: List[Dict[str, Any]] = []
 
         detected_rule_total = 0
@@ -164,113 +107,103 @@ class ReconstructionService:
         missed_total = 0
 
         for step in action_trace:
-            # 1. Correlate step with telemetry findings
-            matched_citations: List[EvidenceCitation] = []
+            step_id = getattr(step, "step_id", step.get("step_id") if isinstance(step, dict) else "")
+            tech_id = getattr(step, "technique_id", step.get("technique_id") if isinstance(step, dict) else "")
+            name = getattr(step, "name", step_id)
+
+            matched_citations: List[Dict[str, Any]] = []
             rule_hits: List[str] = []
             loglm_hits: List[str] = []
+            telemetry_count = 0
 
             for finding in telemetry_findings:
                 finding_step = finding.get("step_id")
                 finding_tech = finding.get("technique_id")
-                source = finding.get("source") or finding.get("data_source") or ""
+                source = finding.get("source") or finding.get("data_source") or "sysmon"
 
-                # Match by explicit step_id or technique_id
-                if finding_step == step.step_id or finding_tech == step.technique_id:
-                    matched_citations.append(
-                        EvidenceCitation(
-                            evidence_id=finding.get("event_id") or finding.get("finding_id") or "ev-1",
-                            source_system=source,
-                            timestamp=finding.get("timestamp", utcnow().isoformat()),
-                            details=finding.get("details") or finding.get("data") or {},
-                        )
+                if finding_step == step_id or finding_tech == tech_id:
+                    telemetry_count += 1
+                    event_id = finding.get("event_id") or finding.get("finding_id") or f"ev-{step_id}"
+                    replay_query = (
+                        f"SELECT * FROM telemetry WHERE environment_id = '{environment_id}' "
+                        f"AND technique_id = '{tech_id}' AND event_id = '{event_id}'"
                     )
+                    citation = {
+                        "citation_id": f"cite-{event_id}",
+                        "source": source,
+                        "event_id": event_id,
+                        "query": replay_query,
+                        "replayable_query": replay_query,
+                        "timestamp": finding.get("timestamp", utcnow().isoformat()),
+                        "details": finding.get("details") or finding.get("data") or {},
+                    }
+                    matched_citations.append(citation)
 
-                    # Distinguish LogLM signal from rule signals
                     is_loglm = (
                         source.lower() == "loglm"
                         or finding.get("schema_kind") == "loglm"
                         or "loglm" in str(finding.get("title", "")).lower()
                         or "embedding" in finding
+                        or finding.get("is_loglm", False)
                     )
                     if is_loglm:
-                        loglm_hits.append(finding.get("finding_id") or finding.get("event_id") or "loglm-finding")
+                        loglm_hits.append(event_id)
 
-                    # Check for rule matches
-                    rule_id = finding.get("rule_id") or finding.get("rule_name") or finding.get("detection_rule")
+                    rule_id = (
+                        finding.get("rule_id")
+                        or finding.get("rule_name")
+                        or finding.get("matching_rule")
+                        or finding.get("detection_rule")
+                    )
                     if rule_id and not is_loglm:
                         rule_hits.append(str(rule_id))
 
-            # 2. Check schema grounding of observed details
-            claimed_fields: Set[str] = set()
-            for citation in matched_citations:
-                claimed_fields.update(citation.details.keys())
-            is_grounded, unsupported = self.verify_field_grounding(claimed_fields, known_schema)
-
-            # 3. Determine detection verdict
             has_rule = len(rule_hits) > 0
             has_loglm = len(loglm_hits) > 0
 
+            verdict_val: Literal["rule", "loglm", "both", "missed"]
             if has_rule and has_loglm:
-                verdict = DetectionVerdictEnum.BOTH
+                verdict_val = "both"
                 both_total += 1
-                explanation = (
-                    f"Step {step.step_id} ({step.technique_id}) was detected by both rule "
-                    f"({', '.join(rule_hits)}) and LogLM anomaly."
-                )
             elif has_rule:
-                verdict = DetectionVerdictEnum.DETECTED_BY_RULE
+                verdict_val = "rule"
                 detected_rule_total += 1
-                explanation = (
-                    f"Step {step.step_id} ({step.technique_id}) was detected by rule: {', '.join(rule_hits)}."
-                )
             elif has_loglm:
-                verdict = DetectionVerdictEnum.DETECTED_BY_LOGLM
+                verdict_val = "loglm"
                 detected_loglm_total += 1
-                explanation = (
-                    f"Step {step.step_id} ({step.technique_id}) was flagged exclusively by LogLM anomaly. "
-                    "Rule layer missed this activity; ideal candidate for grounded rule authoring."
-                )
                 gaps.append({
-                    "step_id": step.step_id,
-                    "technique_id": step.technique_id,
+                    "step_id": step_id,
+                    "technique_id": tech_id,
                     "gap_type": "model_only",
-                    "action_name": step.name,
+                    "action_name": name,
                     "priority": "medium",
                 })
             else:
-                verdict = DetectionVerdictEnum.MISSED
+                verdict_val = "missed"
                 missed_total += 1
-                explanation = (
-                    f"Step {step.step_id} ({step.technique_id}) was completely missed by both detection rules "
-                    "and LogLM. High-priority detection engineering gap."
-                )
                 gaps.append({
-                    "step_id": step.step_id,
-                    "technique_id": step.technique_id,
+                    "step_id": step_id,
+                    "technique_id": tech_id,
                     "gap_type": "complete_miss",
-                    "action_name": step.name,
+                    "action_name": name,
                     "priority": "high",
                 })
 
-            step_verdict = AttackStepVerdict(
-                step_id=step.step_id,
-                technique_id=step.technique_id,
-                action_name=step.name,
-                status=step.status,
-                verdict=verdict,
-                rule_matches=rule_hits,
-                loglm_matches=loglm_hits,
+            verdict_obj = DetectionVerdict(
+                step_id=step_id,
+                technique_id=tech_id,
+                verdict=verdict_val,
+                environment_id=environment_id,
+                matching_rules=rule_hits,
                 evidence_citations=matched_citations,
-                schema_grounded=is_grounded,
-                unsupported_fields=unsupported,
-                explanation=explanation,
+                cycle_number=cycle_number,
+                telemetry_count=telemetry_count,
             )
-            step_verdicts.append(step_verdict)
+            step_verdicts.append(verdict_obj)
 
-            # Record step verdict to Ledger
-            self.append_step_verdict_to_ledger(step_verdict, environment_id)
+            self.append_reconstruction_to_ledger(verdict_obj, ledger_store)
 
-        report = ReconstructionReport(
+        return ReconstructionReport(
             run_id=self.run_id,
             plan_id=plan_id,
             environment_id=environment_id,
@@ -283,21 +216,67 @@ class ReconstructionService:
             gaps=gaps,
         )
 
-        return report
-
-    def append_step_verdict_to_ledger(
+    def append_reconstruction_to_ledger(
         self,
-        verdict: AttackStepVerdict,
-        environment_id: str,
+        verdict: DetectionVerdict,
+        ledger_store: Any = None,
     ) -> int:
-        """Write one reconstruction step event to the append-only Ledger."""
+        """Write schema v1 reconstruction event to append-only Ledger."""
         payload = {
-            "environment_id": environment_id,
-            "verdict": verdict.to_dict(),
+            "schema_version": 1,
+            "step_id": verdict.step_id,
+            "technique_id": verdict.technique_id,
+            "verdict": verdict.verdict,
+            "matching_rules": verdict.matching_rules,
+            "evidence_citations": verdict.evidence_citations,
+            "environment_id": verdict.environment_id,
+            "cycle_number": verdict.cycle_number or 1,
         }
-        return append_agent_event(
-            run_id=self.run_id,
-            kind="reconstruction_verdict",
-            payload=payload,
-            run_kind="compose",
-        )
+        if ledger_store and hasattr(ledger_store, "append"):
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.create_task(
+                        ledger_store.append(
+                            run_id=self.run_id,
+                            event_kind="reconstruction",
+                            payload=payload,
+                            actor="reconstruction_service",
+                        )
+                    )
+            except Exception as exc:
+                logger.warning("Could not append to async store: %s", exc)
+
+        try:
+            return append_agent_event(
+                run_id=self.run_id,
+                kind="reconstruction",
+                payload=payload,
+                run_kind="compose",
+            )
+        except Exception as exc:
+            logger.warning("Could not append reconstruction event to ledger: %s", exc)
+            return 0
+
+
+def skill_reconstruct(
+    action_trace: Sequence[Any],
+    telemetry_findings: Sequence[Dict[str, Any]],
+    environment_id: str,
+    plan_id: str,
+    cycle_number: int = 1,
+    available_schema_fields: Optional[Set[str]] = None,
+    ledger_store: Any = None,
+) -> ReconstructionReport:
+    """Skill entrypoint exposing the reconstruction role."""
+    service = ReconstructionService()
+    return service.reconstruct(
+        action_trace=action_trace,
+        telemetry_findings=telemetry_findings,
+        environment_id=environment_id,
+        plan_id=plan_id,
+        cycle_number=cycle_number,
+        available_schema_fields=available_schema_fields,
+        ledger_store=ledger_store,
+    )

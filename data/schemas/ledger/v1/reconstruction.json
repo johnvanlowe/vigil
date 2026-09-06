@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReconstructionEventV1",
+  "description": "Ledger event for attack step reconstruction verdicts",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "step_id": {
+      "type": "string"
+    },
+    "technique_id": {
+      "type": "string"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "rule",
+        "loglm",
+        "both",
+        "missed"
+      ]
+    },
+    "matching_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_citations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "environment_id": {
+      "type": "string"
+    },
+    "cycle_number": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "verdict"
+  ]
+}

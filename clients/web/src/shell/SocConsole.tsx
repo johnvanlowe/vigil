@@ -26,6 +26,7 @@ import WorkflowsScreen from '../screens/workflows/WorkflowsScreen'
 import AutoOpsScreen from '../screens/autoops/AutoOpsScreen'
 import SettingsScreen from '../screens/settings/SettingsScreen'
 import NotFoundScreen from '../screens/notfound/NotFoundScreen'
+import ScorecardView from '../features/scorecard/ScorecardView'
 import { VigilMark, VigilLogo } from '../shared/VigilLogo'
 
 const SCREENS: Record<ConsoleScreenKey, (props: ConsoleScreenProps) => JSX.Element> = {
@@ -37,6 +38,7 @@ const SCREENS: Record<ConsoleScreenKey, (props: ConsoleScreenProps) => JSX.Eleme
   workflows: WorkflowsScreen,
   autoops: AutoOpsScreen,
   settings: SettingsScreen,
+  scorecard: ScorecardView as any,
 }
 
 /** The only permission check in the app; ProtectedRoute handles auth alone.

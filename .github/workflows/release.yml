@@ -121,6 +121,17 @@ jobs:
             PYTHON_VERSION=${{ steps.pin.outputs.version }}
           platforms: linux/amd64,linux/arm64
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.0
+
+      - name: Sign backend container image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          for tag in ${TAGS}; do
+            cosign sign --yes "${tag}"
+          done
+
   # ---------------------------------------------------------------------------
   # Build + push: daemon
   # ---------------------------------------------------------------------------
@@ -186,6 +197,17 @@ jobs:
             PYTHON_VERSION=${{ steps.pin.outputs.version }}
           platforms: linux/amd64,linux/arm64
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.0
+
+      - name: Sign daemon container image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          for tag in ${TAGS}; do
+            cosign sign --yes "${tag}"
+          done
+
   # ---------------------------------------------------------------------------
   # Build + push: agent (worker and serve run the same image)
   # ---------------------------------------------------------------------------
@@ -246,6 +268,17 @@ jobs:
           build-args: |
             VIGIL_VERSION=${{ github.ref_name }}
           platforms: linux/amd64,linux/arm64
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.0
+
+      - name: Sign agent container image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          for tag in ${TAGS}; do
+            cosign sign --yes "${tag}"
+          done
 
   # ---------------------------------------------------------------------------
   # Smoke-test: pull the images and verify they start

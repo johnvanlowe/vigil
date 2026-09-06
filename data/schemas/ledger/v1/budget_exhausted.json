@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BudgetExhaustedEventV1",
+  "description": "Ledger event emitted when a run or daemon reaches its allocated budget cap",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "run_kind": {
+      "type": "string"
+    },
+    "budget_usd": {
+      "type": "number"
+    },
+    "spend_usd": {
+      "type": "number"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "budget_usd",
+    "spend_usd"
+  ]
+}

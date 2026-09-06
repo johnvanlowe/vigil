@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from core.ledger.hash import GENESIS_HASH, compute_event_hash
 from core.storage.connection import get_db_manager
 from core.time import utcnow
 
@@ -88,11 +89,28 @@ def append_agent_event(
                 )
 
             now = utcnow()
+            try:
+                if dialect_name == "postgresql":
+                    prev_row = sess.execute(
+                        text("SELECT event_hash FROM agent_events WHERE run_id = CAST(:run_id AS uuid) ORDER BY seq DESC LIMIT 1"),
+                        {"run_id": norm_run_id},
+                    ).scalar()
+                else:
+                    prev_row = sess.execute(
+                        text("SELECT event_hash FROM agent_events WHERE run_id = :run_id ORDER BY seq DESC LIMIT 1"),
+                        {"run_id": norm_run_id},
+                    ).scalar()
+            except Exception:
+                prev_row = None
+
+            prev_h = str(prev_row) if prev_row else GENESIS_HASH
+            ev_h = compute_event_hash(prev_h, payload)
+
             if dialect_name == "postgresql":
                 sql = text(
                     """
                     INSERT INTO agent_events (
-                        run_id, run_kind, seq, ts, kind, payload, snapshot, schema_version
+                        run_id, run_kind, seq, ts, kind, payload, snapshot, schema_version, prev_hash, event_hash
                     )
                     SELECT
                         CAST(:run_id AS uuid),
@@ -102,7 +120,9 @@ def append_agent_event(
                         :kind,
                         CAST(:payload AS jsonb),
                         CAST(:snapshot AS jsonb),
-                        :schema_version
+                        :schema_version,
+                        :prev_hash,
+                        :event_hash
                     RETURNING seq
                     """
                 )
@@ -110,7 +130,7 @@ def append_agent_event(
                 sql = text(
                     """
                     INSERT INTO agent_events (
-                        run_id, run_kind, seq, ts, kind, payload, snapshot, schema_version
+                        run_id, run_kind, seq, ts, kind, payload, snapshot, schema_version, prev_hash, event_hash
                     )
                     VALUES (
                         :run_id,
@@ -120,7 +140,9 @@ def append_agent_event(
                         :kind,
                         :payload,
                         :snapshot,
-                        :schema_version
+                        :schema_version,
+                        :prev_hash,
+                        :event_hash
                     )
                     RETURNING seq
                     """
@@ -136,6 +158,8 @@ def append_agent_event(
                     "payload": json.dumps(payload),
                     "snapshot": json.dumps(snapshot) if snapshot is not None else None,
                     "schema_version": schema_version,
+                    "prev_hash": prev_h,
+                    "event_hash": ev_h,
                 },
             )
             assigned_seq = res.scalar()

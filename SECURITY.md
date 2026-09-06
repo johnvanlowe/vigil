@@ -13,14 +13,13 @@ The machine-readable version of this policy is published per
 
 ## Supported Versions
 
-Vigil is pre-1.0. Security fixes land on `main` and ship in the next release —
-we do not backport to earlier minors.
+Vigil 1.0 is the current stable release line. Security fixes land on `main` and are backported to supported release branches.
 
 | Version | Supported | Notes |
 |---------|-----------|-------|
-| Latest `0.x` minor (currently `0.5.x`) | ✅ | Fixes ship here. Upgrade before reporting a bug you can only reproduce on an older tag. |
-| Older `0.x` minors | ❌ | No backports. While in `0.x`, minor bumps may break agent prompts, workflow schemas, and MCP interfaces — see [contributing](https://vigilsoc.org/docs/contributing/#versioning-and-releases). |
-| `main` (unreleased) | ✅ | Reports welcome; note the commit SHA. |
+| `1.0.x` | ✅ | Current stable release line. Fully supported with security patches and advisories. |
+| `0.x` | ⚠️ Best effort | Best effort maintenance until 1.1 release. Users are strongly urged to upgrade to 1.0. |
+| `main` (unreleased) | ✅ | Active development branch. Reports welcome; note the commit SHA. |
 
 Container images (`ghcr.io/vigil-soc/vigil-backend`, `vigil-daemon`) and the
 Helm chart at `infra/helm/vigil/` follow the same window. Chart `version` and

@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS agent_events (
     payload        jsonb       NOT NULL,
     snapshot       jsonb,
     schema_version integer     NOT NULL,
+    prev_hash      text,
+    event_hash     text,
     PRIMARY KEY (run_id, seq)
 );
 

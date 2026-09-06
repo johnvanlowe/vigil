@@ -1,0 +1,55 @@
+name: Database Migrations CI
+
+on:
+  push:
+    branches: [main, feat/*]
+  pull_request:
+    branches: [main, feat/*]
+
+jobs:
+  migrate-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: vigil
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install alembic
+
+      - name: Apply baseline SQL init scripts
+        env:
+          PGPASSWORD: postgrespassword
+        run: |
+          for f in $(ls infra/database/init/*.sql | sort); do
+            echo "Applying $f"
+            psql -h localhost -U postgres -d vigil -f "$f"
+          done
+
+      - name: Stamp Alembic baseline and upgrade head
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/vigil
+        run: |
+          alembic stamp 0001_baseline_0_5_0
+          alembic upgrade head

@@ -8,25 +8,28 @@ VERSION="$(cat "$(dirname "$0")/VERSION" 2>/dev/null || echo "dev")"
 
 usage() {
     cat <<EOF
-Usage: $0 [--daemon|-d] [--with <profile>] [--all]
+Usage: $0 [--daemon|-d] [--with <profile>] [--all] [--auth] [--dryrun]
 
   -d, --daemon      Run in the background (logs/ + pidfiles)
       --with NAME   Also start a profiled service (splunk, kafka, pgadmin,
                     jaeger, prometheus, grafana, otel-collector). Repeatable.
       --all         Also start every profiled service
-
-Core services come from .vigil-autostart (or \$AUTOSTART_SERVICES, else
-postgres redis bifrost ollama). --with/--all are additive to that list.
+      --auth        Enforce full authentication (turns off dev bypass)
+      --dryrun      Run unattended dry run against recorded fixture after boot
 EOF
 }
 
 DAEMON=0
 EXTRA_SERVICES=""
 ALL_PROFILES=0
+ENABLE_AUTH=0
+DRYRUN=0
 while [ $# -gt 0 ]; do
     case "$1" in
         -d|--daemon) DAEMON=1 ;;
         --all) ALL_PROFILES=1 ;;
+        --auth) ENABLE_AUTH=1 ;;
+        --dryrun) DRYRUN=1 ;;
         --with)
             [ -n "${2:-}" ] || { echo "--with requires a service name" >&2; exit 1; }
             EXTRA_SERVICES="$EXTRA_SERVICES $2"; shift ;;
@@ -63,6 +66,18 @@ _CALLER_BIND_HOST="${BIND_HOST:-}"
 load_env
 [ -n "$_CALLER_BIND_HOST" ] && BIND_HOST="$_CALLER_BIND_HOST"
 export BIND_HOST="${BIND_HOST:-127.0.0.1}"
+
+# --- Auth / DEV_MODE posture ---
+if [ "$ENABLE_AUTH" -eq 1 ]; then
+    export DEV_MODE=false
+    echo "🔒 Authentication mode ENABLED (DEV_MODE=false)"
+else
+    export DEV_MODE=true
+    echo "⚠️  ================================================================"
+    echo "⚠️  DEV_MODE ACTIVE: Authentication is bypassed for development!"
+    echo "⚠️  Run with ./start.sh --auth to enforce authentication."
+    echo "⚠️  ================================================================"
+fi
 
 # `bifrost` only resolves inside the compose network. Rewrite before starting
 # services: bringing Ollama up syncs its catalog into Bifrost, and that runs
@@ -153,8 +168,15 @@ if [ "$DAEMON" -eq 0 ]; then
     print_ready
     echo "Press Ctrl+C to stop"
 
-    # Open browser once frontend is ready
-    if [ "$SKIP_FRONTEND" -eq 0 ]; then
+    # Open browser once frontend is ready / execute dry run
+    if [ "$DRYRUN" -eq 1 ]; then
+        echo ""
+        echo "=== Executing Unattended Closed-Loop Dry Run ==="
+        "${PWD}/venv/bin/python" -m core.cli.dryrun --scenario redrun_v1
+        if [ "$SKIP_FRONTEND" -eq 0 ]; then
+            (sleep 3 && (open "http://localhost:6988/#/scorecard" 2>/dev/null || xdg-open "http://localhost:6988/#/scorecard" 2>/dev/null || open "http://localhost:6988/scorecard" 2>/dev/null || xdg-open "http://localhost:6988/scorecard" 2>/dev/null)) &
+        fi
+    elif [ "$SKIP_FRONTEND" -eq 0 ]; then
         (sleep 3 && open "http://localhost:6988/" 2>/dev/null || xdg-open "http://localhost:6988/" 2>/dev/null) &
     fi
 
@@ -201,6 +223,12 @@ else
     fi
 
     print_ready
+    if [ "$DRYRUN" -eq 1 ]; then
+        echo ""
+        echo "=== Launching Unattended Closed-Loop Dry Run in Background ==="
+        nohup "${PWD}/venv/bin/python" -m core.cli.dryrun --scenario redrun_v1 > logs/dryrun.log 2>&1 &
+        echo $! > logs/dryrun.pid
+    fi
     echo ""
     echo "Logs: tail -f logs/{backend,daemon,llm_worker,frontend,agent-worker,agent-serve}.log"
     echo "Stop: ./shutdown_all.sh"

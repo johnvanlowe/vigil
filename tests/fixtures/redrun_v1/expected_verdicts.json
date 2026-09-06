@@ -1,0 +1,53 @@
+[
+  {
+    "step_id": "step-01-recon",
+    "technique_id": "T1087",
+    "verdict": "rule",
+    "environment_id": "staging-range",
+    "matching_rules": [
+      "VIGIL-RULE-T1087-NETUSER"
+    ],
+    "evidence_citations": [
+      {
+        "source": "sysmon",
+        "event_id": "evt-101"
+      }
+    ]
+  },
+  {
+    "step_id": "step-02-lateral",
+    "technique_id": "T1047",
+    "verdict": "both",
+    "environment_id": "staging-range",
+    "matching_rules": [
+      "VIGIL-RULE-T1047-WMIC"
+    ],
+    "evidence_citations": [
+      {
+        "source": "sysmon",
+        "event_id": "evt-102"
+      }
+    ]
+  },
+  {
+    "step_id": "step-03-anomaly",
+    "technique_id": "T1021.002",
+    "verdict": "loglm",
+    "environment_id": "staging-range",
+    "matching_rules": [],
+    "evidence_citations": [
+      {
+        "source": "security_event",
+        "event_id": "evt-103"
+      }
+    ]
+  },
+  {
+    "step_id": "step-04-exfil",
+    "technique_id": "T1048",
+    "verdict": "missed",
+    "environment_id": "staging-range",
+    "matching_rules": [],
+    "evidence_citations": []
+  }
+]

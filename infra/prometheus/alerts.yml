@@ -1,0 +1,50 @@
+groups:
+  - name: vigil_alerts
+    rules:
+      - alert: VigilBudgetExhaustedCritical
+        expr: increase(vigil_budget_exhausted_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vigil workflow budget exhausted; operations degraded to fail-static"
+
+      - alert: VigilHighOverturnRate
+        expr: rate(vigil_agent_dispositions_overturned_total[1h]) / (rate(vigil_agent_dispositions_confirmed_total[1h]) + rate(vigil_agent_dispositions_overturned_total[1h])) > 0.35
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent verdict overturn rate exceeds 35% over 1 hour window"
+
+      - alert: VigilSLABreached
+        expr: increase(vigil_sla_breach_total[15m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Security finding MTTA/MTTR breached policy SLA target"
+
+      - alert: VigilOffensiveSafetyFailure
+        expr: increase(vigil_runs_total{run_kind="compose", status="failed"}[5m]) > 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Offensive loop execution failed safety gating or execution preconditions"
+
+      - alert: VigilWorkerQueueBacklog
+        expr: vigil_queue_depth > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Worker task queue depth is critically backlogged"
+
+      - alert: VigilLedgerTamperDetected
+        expr: increase(vigil_eval_hard_fail_total{suite="ledger"}[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cryptographic tamper detected on the Vigil agent_events ledger hash chain"

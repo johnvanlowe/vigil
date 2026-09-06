@@ -119,10 +119,10 @@ llmWorker:
       memory: 2Gi
   autoscaling:
     # CPU-based HPA (classic). Mutually exclusive with keda.enabled.
-    enabled: false
+    enabled: true
     minReplicas: 2
     maxReplicas: 20
-    targetCPUUtilizationPercentage: 70
+    targetCPUUtilizationPercentage: 80
     # KEDA ScaledObject (issue #116) — scales on actual Redis queue depth.
     # Requires KEDA installed in the cluster (https://keda.sh).
     keda:
@@ -141,7 +141,10 @@ llmWorker:
       # Only used when redis.enabled=false AND redis.bitnami.enabled=false.
       # host:port form without scheme or password.
       redisAddress: ""
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -168,10 +171,10 @@ agentWorker:
       memory: 1Gi
   autoscaling:
     # CPU-based HPA (classic). Mutually exclusive with keda.enabled.
-    enabled: false
+    enabled: true
     minReplicas: 2
     maxReplicas: 20
-    targetCPUUtilizationPercentage: 70
+    targetCPUUtilizationPercentage: 80
     # KEDA ScaledObject — scales on actual Redis queue depth.
     # Requires KEDA installed in the cluster (https://keda.sh).
     keda:
@@ -197,7 +200,10 @@ agentWorker:
       # alongside redis.external.url, to whatever database that URL names -- a
       # scaler counting the wrong one reads an empty queue and never scales up.
       databaseIndex: ""
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
   nodeSelector: {}
   tolerations: []
   affinity: {}

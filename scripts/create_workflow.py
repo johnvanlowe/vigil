@@ -53,6 +53,7 @@ def build_template(workflow_id: str, agents: list[str]) -> str:
 
     return f"""---
 name: {workflow_id}
+schema_version: 1
 description: "TODO: Describe what this workflow does in one sentence."
 use_case: "TODO: Describe the scenario that triggers this workflow."
 trigger_examples:

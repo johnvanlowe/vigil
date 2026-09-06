@@ -107,6 +107,7 @@ USER vigil
 ENV HOME=/home/vigil \
     PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
+    DEV_MODE=false \
     PORT=6987
 
 EXPOSE 6987

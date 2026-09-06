@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PolicyChangeEventV1",
+  "description": "Ledger event recording a policy creation or modification",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "policy_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "autonomy",
+        "budget",
+        "suppression",
+        "offensive",
+        "sla"
+      ]
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "tighten",
+        "loosen"
+      ]
+    },
+    "actor": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "dwell_seconds": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "previous_params": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "new_params": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "policy_id",
+    "direction",
+    "actor"
+  ]
+}

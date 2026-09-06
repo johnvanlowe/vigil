@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RedPlanEventV1",
+  "description": "Ledger event emitted when an attack plan is generated",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "environment_id": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "cycle_number": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "plan_id",
+    "steps"
+  ]
+}

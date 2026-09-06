@@ -198,6 +198,7 @@ class Settings(BaseSettings):
     prompt_injection_block: bool = False
     mcp_auto_connect_on_startup: Optional[bool] = None
     llm_budget_unlimited: bool = False
+    integrations_artemis_enabled: bool = False
     extension_connector_allowlist: Annotated[List[str], NoDecode] = []
 
     # Email

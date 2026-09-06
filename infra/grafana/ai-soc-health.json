@@ -1,0 +1,572 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Health Strip",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Active Runs",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_runs_active)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_runs_active)"
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Worker Queue Depth",
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_queue_depth)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_queue_depth)"
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Alerts Firing",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(ALERTS{alertstate=\"firing\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(ALERTS{alertstate=\"firing\"})"
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Tamper Check",
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_eval_hard_fail_total{suite=\"ledger\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_eval_hard_fail_total{suite=\"ledger\"})"
+    },
+    {
+      "id": 6,
+      "type": "row",
+      "title": "Cost and Budgets",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Total Spend USD",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_spend_usd_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_spend_usd_total)"
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Budget Caps USD",
+      "gridPos": {
+        "x": 6,
+        "y": 8,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_spend_budget_usd)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_spend_budget_usd)"
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Budget Exhaustion Count",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_budget_exhausted_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_budget_exhausted_total)"
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Spend Rate USD/hr",
+      "gridPos": {
+        "x": 18,
+        "y": 8,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "rate(vigil_spend_usd_total[1h]) * 3600",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: rate(vigil_spend_usd_total[1h]) * 3600"
+    },
+    {
+      "id": 11,
+      "type": "row",
+      "title": "Runs and Workflows",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Total Runs",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_runs_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_runs_total)"
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Failed Runs",
+      "gridPos": {
+        "x": 6,
+        "y": 15,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_runs_total{status=\"failed\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_runs_total{status=\"failed\"})"
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Completed Runs",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_runs_total{status=\"completed\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_runs_total{status=\"completed\"})"
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "P95 Run Duration",
+      "gridPos": {
+        "x": 18,
+        "y": 15,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(vigil_run_duration_seconds_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: histogram_quantile(0.95, sum(rate(vigil_run_duration_seconds_bucket[5m])) by (le))"
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Verdicts and Suppression",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Total Verdicts",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_verdict_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_verdict_total)"
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Confirmations",
+      "gridPos": {
+        "x": 6,
+        "y": 22,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_verdict_total{action=\"confirm\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_verdict_total{action=\"confirm\"})"
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Dismissals",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_verdict_total{action=\"dismiss\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_verdict_total{action=\"dismiss\"})"
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Suppressed Findings",
+      "gridPos": {
+        "x": 18,
+        "y": 22,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_suppressed_findings_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_suppressed_findings_total)"
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Escalations",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_escalations_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_escalations_total)"
+    },
+    {
+      "id": 22,
+      "type": "row",
+      "title": "Integrations",
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Ingested Findings",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_created_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_created_total)"
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Dispositioned Findings",
+      "gridPos": {
+        "x": 6,
+        "y": 35,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total)"
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Actions Executed",
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_actions_executed_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_actions_executed_total)"
+    },
+    {
+      "id": 26,
+      "type": "stat",
+      "title": "Irreversible Actions Executed",
+      "gridPos": {
+        "x": 18,
+        "y": 35,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_actions_executed_total{reversibility=\"irreversible\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_actions_executed_total{reversibility=\"irreversible\"})"
+    },
+    {
+      "id": 27,
+      "type": "row",
+      "title": "Closed-Loop Validation",
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 28,
+      "type": "stat",
+      "title": "Closed-Loop Cycles",
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_cycles_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_cycles_total)"
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "Coverage Frontier (Missed)",
+      "gridPos": {
+        "x": 6,
+        "y": 42,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_frontier)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_frontier)"
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "Promoted Detections",
+      "gridPos": {
+        "x": 12,
+        "y": 42,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_rules_promoted_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_rules_promoted_total)"
+    },
+    {
+      "id": 31,
+      "type": "stat",
+      "title": "Failed Loop Runs",
+      "gridPos": {
+        "x": 18,
+        "y": 42,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_cycles_total{status=\"failed\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_cycles_total{status=\"failed\"})"
+    },
+    {
+      "id": 32,
+      "type": "stat",
+      "title": "Loop Frontier Movement",
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "delta(vigil_closed_loop_frontier[1h])",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: delta(vigil_closed_loop_frontier[1h])"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "vigil",
+    "soc"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Vigil AI SOC Health",
+  "uid": "vigil-ai-soc-health",
+  "version": 1
+}

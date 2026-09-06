@@ -1,0 +1,824 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Headline Strip",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Issues Worked",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total)"
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Agent Share %",
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{actor=\"agent\"}) / sum(vigil_work_total) * 100",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{actor=\"agent\"}) / sum(vigil_work_total) * 100"
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Total Spend USD",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_spend_usd_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_spend_usd_total)"
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Cost Per Issue",
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_spend_usd_total) / (sum(vigil_findings_dispositioned_total) + 0.001)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_spend_usd_total) / (sum(vigil_findings_dispositioned_total) + 0.001)"
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "MTTA (P50)",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(vigil_mtta_seconds_bucket[1h])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: histogram_quantile(0.50, sum(rate(vigil_mtta_seconds_bucket[1h])) by (le))"
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "SLA Breaches",
+      "gridPos": {
+        "x": 6,
+        "y": 7,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_sla_breach_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_sla_breach_total)"
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "MTTD Verified",
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(vigil_mttd_seconds_bucket{basis=\"verified\"}[1h])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: histogram_quantile(0.50, sum(rate(vigil_mttd_seconds_bucket{basis=\"verified\"}[1h])) by (le))"
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Who Does The Work",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Agent Work Items",
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{actor=\"agent\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{actor=\"agent\"})"
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Human Analyst Work Items",
+      "gridPos": {
+        "x": 6,
+        "y": 14,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{actor=\"human\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{actor=\"human\"})"
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Policy Work Items",
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{actor=\"policy\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{actor=\"policy\"})"
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Triage Stage Work",
+      "gridPos": {
+        "x": 18,
+        "y": 14,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{stage=\"triage\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{stage=\"triage\"})"
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Investigate Stage Work",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{stage=\"investigate\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{stage=\"investigate\"})"
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Respond Stage Work",
+      "gridPos": {
+        "x": 6,
+        "y": 20,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{stage=\"respond\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{stage=\"respond\"})"
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Agent Triage Share %",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_work_total{stage=\"triage\", actor=\"agent\"}) / sum(vigil_work_total{stage=\"triage\"}) * 100",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_work_total{stage=\"triage\", actor=\"agent\"}) / sum(vigil_work_total{stage=\"triage\"}) * 100"
+    },
+    {
+      "id": 17,
+      "type": "row",
+      "title": "Throughput and Issues Worked",
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Findings Ingested",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_created_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_created_total)"
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Findings Dispositioned",
+      "gridPos": {
+        "x": 6,
+        "y": 27,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total)"
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "Cases Escalated",
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_escalations_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_escalations_total)"
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "Actions Taken",
+      "gridPos": {
+        "x": 18,
+        "y": 27,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_actions_executed_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_actions_executed_total)"
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "Dispositions By Human",
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total{actor=\"human\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total{actor=\"human\"})"
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Dispositions By Agent",
+      "gridPos": {
+        "x": 6,
+        "y": 33,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total{actor=\"agent\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total{actor=\"agent\"})"
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Dispositions By Policy",
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_findings_dispositioned_total{actor=\"policy\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_findings_dispositioned_total{actor=\"policy\"})"
+    },
+    {
+      "id": 25,
+      "type": "row",
+      "title": "SLA and Attainment Targets",
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 26,
+      "type": "stat",
+      "title": "Critical MTTA Target",
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "vigil_sla_target_seconds{sla=\"mtta\", severity=\"critical\"}",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: vigil_sla_target_seconds{sla=\"mtta\", severity=\"critical\"}"
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "High MTTA Target",
+      "gridPos": {
+        "x": 6,
+        "y": 40,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "vigil_sla_target_seconds{sla=\"mtta\", severity=\"high\"}",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: vigil_sla_target_seconds{sla=\"mtta\", severity=\"high\"}"
+    },
+    {
+      "id": 28,
+      "type": "stat",
+      "title": "Critical MTTR Target",
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "vigil_sla_target_seconds{sla=\"mttr\", severity=\"critical\"}",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: vigil_sla_target_seconds{sla=\"mttr\", severity=\"critical\"}"
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "High MTTR Target",
+      "gridPos": {
+        "x": 18,
+        "y": 40,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "vigil_sla_target_seconds{sla=\"mttr\", severity=\"high\"}",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: vigil_sla_target_seconds{sla=\"mttr\", severity=\"high\"}"
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "Total SLA Breaches",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_sla_breach_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_sla_breach_total)"
+    },
+    {
+      "id": 31,
+      "type": "stat",
+      "title": "Critical Breaches",
+      "gridPos": {
+        "x": 6,
+        "y": 46,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_sla_breach_total{severity=\"critical\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_sla_breach_total{severity=\"critical\"})"
+    },
+    {
+      "id": 32,
+      "type": "stat",
+      "title": "High Breaches",
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_sla_breach_total{severity=\"high\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_sla_breach_total{severity=\"high\"})"
+    },
+    {
+      "id": 33,
+      "type": "row",
+      "title": "Effectiveness and Quality",
+      "gridPos": {
+        "x": 0,
+        "y": 52,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 34,
+      "type": "stat",
+      "title": "Agent Confirmed Rate %",
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_agent_dispositions_confirmed_total) / (sum(vigil_agent_dispositions_confirmed_total) + sum(vigil_agent_dispositions_overturned_total) + 0.001) * 100",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_agent_dispositions_confirmed_total) / (sum(vigil_agent_dispositions_confirmed_total) + sum(vigil_agent_dispositions_overturned_total) + 0.001) * 100"
+    },
+    {
+      "id": 35,
+      "type": "stat",
+      "title": "Agent Overturned Count",
+      "gridPos": {
+        "x": 6,
+        "y": 53,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_agent_dispositions_overturned_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_agent_dispositions_overturned_total)"
+    },
+    {
+      "id": 36,
+      "type": "stat",
+      "title": "Benchmark Eval Score",
+      "gridPos": {
+        "x": 12,
+        "y": 53,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "avg(vigil_eval_score)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: avg(vigil_eval_score)"
+    },
+    {
+      "id": 37,
+      "type": "stat",
+      "title": "Hard Failure Count",
+      "gridPos": {
+        "x": 18,
+        "y": 53,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_eval_hard_fail_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_eval_hard_fail_total)"
+    },
+    {
+      "id": 38,
+      "type": "stat",
+      "title": "Hours Returned Estimate",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_hours_returned_estimate)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_hours_returned_estimate)"
+    },
+    {
+      "id": 39,
+      "type": "stat",
+      "title": "Triage Hours Saved",
+      "gridPos": {
+        "x": 6,
+        "y": 59,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_hours_returned_estimate{stage=\"triage\"})",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_hours_returned_estimate{stage=\"triage\"})"
+    },
+    {
+      "id": 40,
+      "type": "row",
+      "title": "Autonomy Posture & Closed-Loop",
+      "gridPos": {
+        "x": 0,
+        "y": 65,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 41,
+      "type": "stat",
+      "title": "Closed-Loop Cycles Run",
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_cycles_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_cycles_total)"
+    },
+    {
+      "id": 42,
+      "type": "stat",
+      "title": "Detections Promoted",
+      "gridPos": {
+        "x": 6,
+        "y": 66,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_rules_promoted_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_rules_promoted_total)"
+    },
+    {
+      "id": 43,
+      "type": "stat",
+      "title": "Frontier Gaps Remaining",
+      "gridPos": {
+        "x": 12,
+        "y": 66,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_closed_loop_frontier)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_closed_loop_frontier)"
+    },
+    {
+      "id": 44,
+      "type": "stat",
+      "title": "Suppressed Findings Count",
+      "gridPos": {
+        "x": 18,
+        "y": 66,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_suppressed_findings_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_suppressed_findings_total)"
+    },
+    {
+      "id": 45,
+      "type": "stat",
+      "title": "Budget Exhaustions",
+      "gridPos": {
+        "x": 0,
+        "y": 72,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(vigil_budget_exhausted_total)",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: sum(vigil_budget_exhausted_total)"
+    },
+    {
+      "id": 46,
+      "type": "stat",
+      "title": "Ledger Verifications Passed",
+      "gridPos": {
+        "x": 6,
+        "y": 72,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "1",
+          "refId": "A"
+        }
+      ],
+      "description": "Metric query: 1"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "vigil",
+    "soc"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Vigil CISO Executive View",
+  "uid": "vigil-ciso-view",
+  "version": 1
+}
